@@ -17,9 +17,10 @@ struct Tab: Identifiable, Equatable, Hashable {
 struct ContentView: View {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
-    
-    @State private var tabs: [Tab] = []
+    @State private var lastTabId: UUID = UUID()
+    @State private var tabs: [Tab] = [Tab(id: UUID(), name: "blinksh/1")]
     @State private var selectedTab: Tab? = nil
+    @State private var neededScrolling: Bool = false
     
     var body: some View {
         ZStack {
@@ -43,6 +44,9 @@ struct ContentView: View {
                 iPhoneTabView
             }
         }
+        .onAppear {
+            selectedTab = tabs[0]
+        }
     }
     
     
@@ -50,44 +54,61 @@ struct ContentView: View {
     //MARK: Views
     var iPadTabsView: some View {
         HStack(spacing: 20) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(tabs, id: \.id) { tab in
-                        Button(action: {
-                            selectedTab = tab
-                        }) {
-                            HStack {
-                                HStack {
-                                    if selectedTab == tab {
-                                        Button(action: {
-                                            removeTab(tab)
-                                        }) {
-                                            ZStack {
-                                                Color(.secondaryLabel)
-                                                    .cornerRadius(3.0)
-                                                Image(systemName: "multiply")
-                                                    .fontWeight(.semibold)
-                                                    .foregroundColor(Color(.systemGray4))
-                                                    .font(.system(size: 11))
-                                            }
-                                            .frame(width: 15, height: 15)
-                                            .padding(.leading, 0)
-                                            .padding(.trailing, 4)
-                                        }
-                                    } else {
-                                        Image(systemName: "slash.circle.fill")
-                                            .fontWeight(.medium)
-                                            .padding(.leading, 0)
-                                    }
-                                    
-                                    Text(tab.name)
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(tabs, id: \.id) { tab in
+                            Button(action: {
+                                withAnimation {
+                                    selectedTab = tab
                                 }
-                                .padding(.horizontal, 15)
+                            }) {
+                                HStack {
+                                    HStack {
+                                        if selectedTab == tab {
+                                            Button(action: {
+                                                removeTab(tab)
+                                            }) {
+                                                ZStack {
+                                                    Color(.secondaryLabel)
+                                                        .cornerRadius(3.0)
+                                                    Image(systemName: "multiply")
+                                                        .fontWeight(.semibold)
+                                                        .foregroundColor(Color(.systemGray4))
+                                                        .font(.system(size: 11))
+                                                }
+                                                .frame(width: 15, height: 15)
+                                                .padding(.leading, 0)
+                                                .padding(.trailing, 4)
+                                            }
+                                        } else {
+                                            Image(systemName: "slash.circle.fill")
+                                                .fontWeight(.medium)
+                                                .padding(.leading, 0)
+                                        }
+                                        Text(tab.name)
+                                        
+                                        if selectedTab == tab {
+                                            Spacer()
+                                            Image(systemName: "slash.circle.fill")
+                                                .fontWeight(.medium)
+                                                .opacity(0.6)
+                                                .foregroundColor(Color(.secondaryLabel))
+                                                .padding(.leading, 0)
+                                        }
+                                    }
+                                    .padding(.horizontal, 15)
+                                }
+                                .frame(width: selectedTab == tab ? 260 : 135, height: 35)
+                                .background(selectedTab == tab ? Color(.systemGray4) : Color(.systemGray6))
+                                .foregroundColor(selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
+                                .cornerRadius(10)
                             }
-                            .frame(height: 35)
-                            .background(selectedTab == tab ? Color(.systemGray4) : Color(.systemGray6))
-                            .foregroundColor(selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
-                            .cornerRadius(10)
+                            .onAppear {
+                                withAnimation {
+                                    proxy.scrollTo(lastTabId, anchor: .trailing)
+                                }
+                            }
                         }
                     }
                 }
@@ -115,49 +136,58 @@ struct ContentView: View {
     var iPhoneTabView: some View {
         VStack {
             Spacer()
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(tabs, id: \.id) { tab in
-                        HStack(spacing: 0) {
-                            Text(tab.name)
-                                .font(.system(size: 17, weight: .regular))
-                                .padding()
-                                .padding([.leading], 5.5)
-                            
-                            Spacer()
-                            
-                            Button {
-                                addTab()
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                            .padding(.horizontal, 8)
-                            .tint(.teal)
-                            
-                            Button {
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        ForEach(tabs, id: \.id) { tab in
+                            HStack(spacing: 0) {
+                                Text(tab.name)
+                                    .font(.system(size: 17, weight: .regular))
+                                    .padding()
+                                    .padding([.leading], 5.5)
                                 
-                            } label: {
-                                Image(systemName: "list.bullet")
+                                Spacer()
+                                
+                                Button {
+                                    addTab()
+                                    neededScrolling.toggle()
+                                } label: {
+                                    Image(systemName: "plus")
+                                }
+                                .padding(.horizontal, 8)
+                                .tint(.teal)
+                                
+                                Button {
+                                    
+                                } label: {
+                                    Image(systemName: "list.bullet")
+                                }
+                                .padding(.trailing, 20)
+                                .tint(.teal)
                             }
-                            .padding(.trailing, 20)
-                            .tint(.teal)
+                            .onChange(of: neededScrolling) {
+                                proxy.scrollTo(lastTabId)
+                            }
+                            .background(
+                                BlurView(style: .systemThinMaterial)
+                            )
+                            .cornerRadius(18)
+                            .containerRelativeFrame(.horizontal, count: 1, spacing: 25)
+                            .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 2)
+                            .onAppear {
+                                withAnimation {
+                                    proxy.scrollTo(lastTabId, anchor: .trailing)
+                                }
+                            }
                         }
-                        .background(
-                            BlurView(style: .systemThinMaterial)
-                        )
-                        .cornerRadius(18)
-                        .containerRelativeFrame(.horizontal, count: 1, spacing: 25)
-//                        .frame(minWidth: UIScreen.main.bounds.width - 60)
-                        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 2)
-//                        .padding([.all], 30)
                     }
+                    .scrollTargetLayout()
+                    .padding(.vertical, 0)
                 }
-                .scrollTargetLayout()
-                .padding(.vertical, 0)
+                .contentMargins(25, for: .scrollContent)
+                .scrollTargetBehavior(.viewAligned)
+                .padding(.bottom, 30)
             }
-            .contentMargins(25, for: .scrollContent)
-            .scrollTargetBehavior(.viewAligned)
-            .padding(.bottom, 30)
         }
     }
     
@@ -165,20 +195,37 @@ struct ContentView: View {
     
     //MARK: Main methods
     private func addTab() {
-        let newTab = Tab(id: UUID() , name: "blinksh/\(tabs.count + 1)")
-        tabs.append(newTab)
-        selectedTab = newTab
+        withAnimation {
+            let newTab = Tab(id: UUID(), name: "blinksh/\(tabs.count + 1)")
+            if horizontalSizeClass == .compact {
+                tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)!)
+            } else {
+                tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)! + 1)
+            }
+            selectedTab = newTab
+            lastTabId = newTab.id
+        }
     }
     
     private func removeTab(_ tab: Tab) {
-        if let index = tabs.firstIndex(of: tab) {
-            if selectedTab == tab {
-                if tabs.count != 1 {
-                    selectedTab = tabs[index - 1]
+        withAnimation {
+            if (tabs.count > 1 && tabs[0] != tab) || (tabs.count > 1 && tab == tabs[0]) {
+                if let index = tabs.firstIndex(of: tab) {
+                    if selectedTab == tab {
+                        if tabs.count != 1 {
+                            if tabs.count > 1 && tab == tabs[0] {
+                                selectedTab = tabs[index + 1]
+                                lastTabId = tabs[index + 1].id
+                            } else {
+                                selectedTab = tabs[index - 1]
+                                lastTabId = tabs[index - 1].id
+                            }
+                        }
+                    }
+                    
+                    tabs.remove(at: index)
                 }
             }
-            
-            tabs.remove(at: index)
         }
     }
 }
