@@ -65,7 +65,7 @@ struct ContentView: View {
                             }) {
                                 HStack {
                                     HStack {
-                                        if selectedTab == tab {
+                                        if selectedTab == tab && tabs.count > 1 {
                                             Button(action: {
                                                 removeTab(tab)
                                             }) {
@@ -82,9 +82,11 @@ struct ContentView: View {
                                                 .padding(.trailing, 4)
                                             }
                                         } else {
-                                            Image(systemName: "slash.circle.fill")
-                                                .fontWeight(.medium)
-                                                .padding(.leading, 0)
+                                            if tabs.count > 1 {
+                                                Image(systemName: "slash.circle.fill")
+                                                    .fontWeight(.medium)
+                                                    .padding(.leading, 0)
+                                            }
                                         }
                                         Text(tab.name)
                                         
@@ -99,7 +101,7 @@ struct ContentView: View {
                                     }
                                     .padding(.horizontal, 15)
                                 }
-                                .frame(width: selectedTab == tab ? 260 : 135, height: 35)
+                                .frame(width: selectedTab == tab ? 280 : 135, height: 35)
                                 .background(selectedTab == tab ? Color(.systemGray4) : Color(.systemGray6))
                                 .foregroundColor(selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
                                 .cornerRadius(10)
