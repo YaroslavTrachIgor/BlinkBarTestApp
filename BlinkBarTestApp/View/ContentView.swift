@@ -19,16 +19,20 @@ struct ContentView: View {
     @State private var isTabsBarVisible: Bool = false
     
     //MARK: - Timer Properties
-    @State var countDownTimer = 5
+    @State var isShowingRenameAlert = false
+    @State var newTabName = ""
+    @State var countDownTimer = 7
     @State var timerRunning = false
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    @State var contextRenameTab: Tab? = nil
     
     
     //MARK: - Main View Configuration
     var body: some View {
         ZStack {
             VStack {
-                Spacer()
+                Spacer(minLength: 300)
                 
                 Button(action: {
                     withAnimation {
@@ -75,7 +79,7 @@ struct ContentView: View {
                 withAnimation {
                     timerRunning = false
                     isTabsBarVisible = false
-                    countDownTimer = 5
+                    countDownTimer = 7
                     print(timerRunning)
                 }
             }
@@ -85,8 +89,9 @@ struct ContentView: View {
     
     //MARK: - Main methods
     private func restartBarTimer() {
-        countDownTimer = 5
+        countDownTimer = 7
         timerRunning = true
+        isTabsBarVisible = true
     }
 }
 
@@ -113,10 +118,12 @@ extension ContentView {
                                         HStack {
                                             if tabsManager.selectedTab == tab && tabsManager.tabs.count > 1 {
                                                 Button(action: {
-                                                    
-                                                    //Button to remove the selected tab
-                                                    tabsManager.removeTab(tab)
-                                                    restartBarTimer()
+                                                    withAnimation {
+                                                        
+                                                        //Button to remove the selected tab
+                                                        tabsManager.removeTab(tab)
+                                                        restartBarTimer()
+                                                    }
                                                 }) {
                                                     ZStack {
                                                         Color(.secondaryLabel)
@@ -156,7 +163,52 @@ extension ContentView {
                                     .background(tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415))
                                     .foregroundColor(tabsManager.selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
                                     .cornerRadius(17.5)
+                                    .contextMenu {
+                                        VStack {
+                                            Button(action: {
+                                                isShowingRenameAlert.toggle()
+                                                restartBarTimer()
+                                            }) {
+                                                Label("Rename", systemImage: "pencil")
+                                            }
+                                            
+                                            if tabsManager.tabs.count != 1 {
+                                                Button(role: .destructive, action: {
+                                                    withAnimation {
+                                                        tabsManager.removeTab(tab)
+                                                        restartBarTimer()
+                                                    }
+                                                }) {
+                                                    Label("Delete ", systemImage: "multiply")
+                                                }
+                                                .tint(.red)
+                                            }
+                                        }
+                                        .onAppear {
+                                            print("Tab Name")
+                                            print(tab.name)
+                                            contextRenameTab = tab
+                                        }
+                                    }
+                                    .alert("Rename Tab", isPresented: $isShowingRenameAlert) {
+                                        VStack {
+                                            TextField("New Tab Name", text: $newTabName)
+                                                .textInputAutocapitalization(.never)
+                                            Button("OK") {
+                                                withAnimation {
+                                                    if let contextTab = contextRenameTab {
+                                                        tabsManager.renameTab(contextTab, newName: newTabName)
+                                                        newTabName = ""
+                                                    }
+                                                }
+                                            }
+                                            Button("Cancel", role: .cancel) { }
+                                        }
+                                    } message: {
+                                        Text("Enter new tab name")
+                                    }
                                 }
+                                .cornerRadius(17.5)
                                 .onAppear {
                                     withAnimation {
                                         
@@ -164,6 +216,7 @@ extension ContentView {
                                         proxy.scrollTo(tabsManager.lastTabId, anchor: .trailing)
                                     }
                                 }
+                                .cornerRadius(17.5)
                             }
                         }
                         .cornerRadius(17.5)
@@ -226,9 +279,11 @@ extension ContentView {
                         HStack {
                             Text(tabsManager.tabs[index].name)
                                 .font(.system(size: 17, weight: .regular))
+                                .frame(width: 200, alignment: .leading)
                                 .padding()
                             
                             Spacer()
+                                .frame(maxWidth: .infinity)
                             
                             Button {
                                 withAnimation {
@@ -254,12 +309,50 @@ extension ContentView {
                             .padding(.trailing, 15)
                             .tint(.teal)
                         }
-                        .padding(.horizontal, 20)
+                        .cornerRadius(16)
                         .background(
                             BlurView(style: .systemThinMaterial)
                                 .cornerRadius(16)
-                                .padding(.horizontal, 20)
                         )
+                        .contextMenu {
+                            Button(action: {
+                                restartBarTimer()
+                                isShowingRenameAlert.toggle()
+                            }) {
+                                Label("Rename", systemImage: "pencil")
+                            }
+                            if tabsManager.tabs.count != 1 {
+                                Button(role: .destructive, action: {
+                                    withAnimation {
+                                        restartBarTimer()
+                                        tabsManager.removeTab(tabsManager.tabs[index])
+                                    }
+                                }) {
+                                    Label("Delete ", systemImage: "multiply")
+                                }
+                                .tint(.red)
+                            }
+                        }
+                        .alert("New Tab Name", isPresented: $isShowingRenameAlert) {
+                                TextField("Tab Name", text: $newTabName)
+                                    .textInputAutocapitalization(.never)
+                            Button("OK", action: {
+                                withAnimation {
+                                    tabsManager.renameTab(tabsManager.tabs[index], newName: newTabName)
+                                    restartBarTimer()
+                                    newTabName = ""
+                                    tabsManager.setNewSelected(tabsManager.tabs[index])
+                                }
+                            })
+                            Button("Cancel", role: .cancel) { 
+                                newTabName = "";
+                                restartBarTimer();
+                                tabsManager.setNewSelected(tabsManager.tabs[index]) }
+                            } message: {
+                                Text("Please enter new tab name.")
+                            }
+                        .cornerRadius(16)
+                        .padding(.horizontal, 20)
                         .tag(index)
                         .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 2)
                         .onAppear {
@@ -309,3 +402,9 @@ extension ContentView {
         }
     }
 }
+
+
+//if let index = tabsManager.tabs.firstIndex(of: contextTab) {
+//    tabsManager.renameTab(tabsManager.tabs[index], newName: newTabName)
+//    newTabName = ""
+//}

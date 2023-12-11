@@ -31,9 +31,18 @@ final class TabsManager: ObservableObject {
     
     func addTab() {
         let newTab = Tab(id: UUID(), name: "blinksh/\(tabs.count + 1)")
+        print(tabs.firstIndex(of: selectedTab!) ?? "No ID")
         tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)! + 1)
         selectedTab = newTab
         lastTabId = newTab.id
+    }
+    
+    func renameTab(_ tab: Tab, newName: String) {
+        if let index = tabs.firstIndex(of: tab) {
+            tabs[index].name = newName
+            selectedTab = tabs[index]
+            lastTabId = tabs[index].id
+        }
     }
     
     func removeTab(_ tab: Tab) {
