@@ -26,6 +26,7 @@ struct ContentView: View {
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @State var contextRenameTab: Tab? = nil
+    @State var contextRenameTabPlaceholder: String = "Enter new Tab name"
     
     
     //MARK: - Main View Configuration
@@ -88,8 +89,8 @@ struct ContentView: View {
     
     
     //MARK: - Main methods
-    private func restartBarTimer() {
-        countDownTimer = 7
+    private func restartBarTimer(seconds: Int = 7) {
+        countDownTimer = seconds
         timerRunning = true
         isTabsBarVisible = true
     }
@@ -159,6 +160,11 @@ extension ContentView {
                                         }
                                         .padding(.horizontal, 15)
                                     }
+                                    .onDrag {
+                                        tabsManager.draggedTab = tab; restartBarTimer()
+                                        return NSItemProvider()
+                                    }
+                                    .onDrop(of: ["public.item"], delegate: DragRelocateDelegate(tab: tab, tabsManager: tabsManager))
                                     .frame(width: tabsManager.selectedTab == tab ? 280 : 135, height: 35)
                                     .background(tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415))
                                     .foregroundColor(tabsManager.selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
@@ -167,7 +173,7 @@ extension ContentView {
                                         VStack {
                                             Button(action: {
                                                 isShowingRenameAlert.toggle()
-                                                restartBarTimer()
+                                                restartBarTimer(seconds: 999)
                                             }) {
                                                 Label("Rename", systemImage: "pencil")
                                             }
@@ -188,21 +194,24 @@ extension ContentView {
                                             print("Tab Name")
                                             print(tab.name)
                                             contextRenameTab = tab
+                                            contextRenameTabPlaceholder = tab.name
+                                            restartBarTimer(seconds: 999)
                                         }
                                     }
                                     .alert("Rename Tab", isPresented: $isShowingRenameAlert) {
                                         VStack {
-                                            TextField("New Tab Name", text: $newTabName)
+                                            TextField(contextRenameTabPlaceholder, text: $newTabName)
                                                 .textInputAutocapitalization(.never)
                                             Button("OK") {
                                                 withAnimation {
                                                     if let contextTab = contextRenameTab {
                                                         tabsManager.renameTab(contextTab, newName: newTabName)
                                                         newTabName = ""
+                                                        restartBarTimer()
                                                     }
                                                 }
                                             }
-                                            Button("Cancel", role: .cancel) { }
+                                            Button("Cancel", role: .cancel) { newTabName = ""; restartBarTimer() }
                                         }
                                     } message: {
                                         Text("Enter new tab name")
@@ -315,38 +324,43 @@ extension ContentView {
                                 .cornerRadius(16)
                         )
                         .contextMenu {
-                            Button(action: {
-                                restartBarTimer()
-                                isShowingRenameAlert.toggle()
-                            }) {
-                                Label("Rename", systemImage: "pencil")
-                            }
-                            if tabsManager.tabs.count != 1 {
-                                Button(role: .destructive, action: {
-                                    withAnimation {
-                                        restartBarTimer()
-                                        tabsManager.removeTab(tabsManager.tabs[index])
-                                    }
+                            VStack {
+                                Button(action: {
+                                    restartBarTimer(seconds: 999)
+                                    isShowingRenameAlert.toggle()
                                 }) {
-                                    Label("Delete ", systemImage: "multiply")
+                                    Label("Rename", systemImage: "pencil")
                                 }
-                                .tint(.red)
+                                if tabsManager.tabs.count != 1 {
+                                    Button(role: .destructive, action: {
+                                        withAnimation {
+                                            restartBarTimer()
+                                            tabsManager.removeTab(tabsManager.tabs[index])
+                                        }
+                                    }) {
+                                        Label("Delete ", systemImage: "multiply")
+                                    }
+                                    .tint(.red)
+                                }
+                            }
+                            .onAppear {
+                                restartBarTimer(seconds: 999)
                             }
                         }
                         .alert("New Tab Name", isPresented: $isShowingRenameAlert) {
-                                TextField("Tab Name", text: $newTabName)
+                            TextField(tabsManager.tabs[index].name, text: $newTabName)
                                     .textInputAutocapitalization(.never)
                             Button("OK", action: {
                                 withAnimation {
                                     tabsManager.renameTab(tabsManager.tabs[index], newName: newTabName)
-                                    restartBarTimer()
+                                    restartBarTimer(seconds: 7)
                                     newTabName = ""
                                     tabsManager.setNewSelected(tabsManager.tabs[index])
                                 }
                             })
                             Button("Cancel", role: .cancel) { 
                                 newTabName = "";
-                                restartBarTimer();
+                                restartBarTimer(seconds: 7);
                                 tabsManager.setNewSelected(tabsManager.tabs[index]) }
                             } message: {
                                 Text("Please enter new tab name.")
@@ -404,7 +418,18 @@ extension ContentView {
 }
 
 
-//if let index = tabsManager.tabs.firstIndex(of: contextTab) {
-//    tabsManager.renameTab(tabsManager.tabs[index], newName: newTabName)
-//    newTabName = ""
-//}
+struct DragRelocateDelegate: DropDelegate {
+    let tab: Tab
+    let tabsManager: TabsManager
+    
+    func performDrop(info: DropInfo) -> Bool {
+        let fromIndex = tabsManager.tabs.firstIndex { $0.id == tab.id } ?? 0
+        let toIndex = tabsManager.tabs.firstIndex { $0.id == tabsManager.draggedTab!.id } ?? 0
+        
+        withAnimation {
+            tabsManager.tabs.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
+        }
+        
+        return true
+    }
+}

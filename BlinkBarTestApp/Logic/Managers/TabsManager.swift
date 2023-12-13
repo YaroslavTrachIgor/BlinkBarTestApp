@@ -15,6 +15,7 @@ final class TabsManager: ObservableObject {
     @Published var tabs: [Tab] = [Tab(id: UUID(), name: "blinksh/1")]
     @Published var lastTabId: UUID = UUID()
     @Published var selectedTab: Tab? = nil
+    @Published var draggedTab: Tab? = nil
     
     func setNewSelected(_ tab: Tab) {
         selectedTab = tab
