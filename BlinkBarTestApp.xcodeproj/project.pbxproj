@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE014EBB2B4073BB00183C99 /* TabsEditSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE014EBA2B4073BB00183C99 /* TabsEditSheetView.swift */; };
 		CE71EB0F2B12D2490045ED26 /* BlinkBarTestAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE71EB0E2B12D2490045ED26 /* BlinkBarTestAppApp.swift */; };
 		CE71EB112B12D2490045ED26 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE71EB102B12D2490045ED26 /* ContentView.swift */; };
 		CE71EB132B12D24A0045ED26 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE71EB122B12D24A0045ED26 /* Assets.xcassets */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CE014EBA2B4073BB00183C99 /* TabsEditSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabsEditSheetView.swift; sourceTree = "<group>"; };
 		CE71EB0B2B12D2490045ED26 /* BlinkBarTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlinkBarTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE71EB0E2B12D2490045ED26 /* BlinkBarTestAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkBarTestAppApp.swift; sourceTree = "<group>"; };
 		CE71EB102B12D2490045ED26 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				CE71EB102B12D2490045ED26 /* ContentView.swift */,
+				CE014EBA2B4073BB00183C99 /* TabsEditSheetView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -190,6 +193,7 @@
 				CE71EB902B1B0D280045ED26 /* TabsManager.swift in Sources */,
 				CE71EB932B1B0DE20045ED26 /* BlurView.swift in Sources */,
 				CE71EB112B12D2490045ED26 /* ContentView.swift in Sources */,
+				CE014EBB2B4073BB00183C99 /* TabsEditSheetView.swift in Sources */,
 				CE71EB0F2B12D2490045ED26 /* BlinkBarTestAppApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

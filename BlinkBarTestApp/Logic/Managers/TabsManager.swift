@@ -9,6 +9,9 @@ import Foundation
 import SwiftUI
 import Combine
 
+extension Notification.Name {
+    static let tabsUpdated = Notification.Name("tabsUpdated")
+}
 
 final class TabsManager: ObservableObject {
     
@@ -19,15 +22,18 @@ final class TabsManager: ObservableObject {
     
     func setNewSelected(_ tab: Tab) {
         selectedTab = tab
+        updateTabs()
     }
     
     func setNewSelectedIndex(_ tab: Tab) {
         selectedTab = tab
         lastTabId = tab.id
+        updateTabs()
     }
     
     func setInitialSelectedTab() {
         selectedTab = tabs[0]
+        updateTabs()
     }
     
     func addTab() {
@@ -36,6 +42,7 @@ final class TabsManager: ObservableObject {
         tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)! + 1)
         selectedTab = newTab
         lastTabId = newTab.id
+        updateTabs()
     }
     
     func renameTab(_ tab: Tab, newName: String) {
@@ -44,6 +51,7 @@ final class TabsManager: ObservableObject {
             selectedTab = tabs[index]
             lastTabId = tabs[index].id
         }
+        updateTabs()
     }
     
     func removeTab(_ tab: Tab) {
@@ -63,5 +71,18 @@ final class TabsManager: ObservableObject {
                 tabs.remove(at: index)
             }
         }
+        updateTabs()
+    }
+    
+    func removeTabs(at indexes: [Int]) {
+        let sortedIndexes = indexes.sorted(by: >)
+        for index in sortedIndexes {
+            tabs.remove(at: index)
+        }
+        updateTabs()
+    }
+    
+    func updateTabs() {
+        NotificationCenter.default.post(name: .tabsUpdated, object: nil)
     }
 }

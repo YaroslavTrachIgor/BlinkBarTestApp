@@ -14,6 +14,8 @@ struct ContentView: View {
     
     @StateObject var tabsManager = TabsManager()
 
+    @State private var isTabsEditSheetView: Bool = false
+    
     //MARK: - Tabs UI Properties
     @State private var tabViewSelection: Int = 0
     @State private var isTabsBarVisible: Bool = false
@@ -258,7 +260,7 @@ extension ContentView {
                 
                 Button {
                     withAnimation {
-                        restartBarTimer()
+                        restartBarTimer(seconds: 7)
                     }
                 } label: {
                     Text("\(tabsManager.tabs.count) \(tabsManager.tabs.count > 1 ? "Tabs" : "Tab")")
@@ -310,7 +312,8 @@ extension ContentView {
                             
                             Button {
                                 withAnimation {
-                                    restartBarTimer()
+                                    isTabsEditSheetView.toggle()
+                                    restartBarTimer(seconds: 999)
                                 }
                             } label: {
                                 Image(systemName: "list.bullet")
@@ -385,6 +388,9 @@ extension ContentView {
                     .padding(.horizontal, 0)
                     .safeAreaPadding(.horizontal, 0)
                 }
+            }
+            .fullScreenCover(isPresented: $isTabsEditSheetView) {
+                TabsEditSheetView(tabsManager: tabsManager)
             }
             .onChange(of: tabViewSelection) { newIndex in
                 withAnimation {
