@@ -39,11 +39,14 @@ struct TabsEditSheetView: View {
                     }
                 }
                 .onDelete { indexSet in
-                    guard tabsManager.tabs.count > 1 else {
-                        return // Prevent deletion if there's only one tab
-                    }
                     let indexes = Array(indexSet)
                     tabsManager.removeTabs(at: indexes)
+                    
+                    withAnimation {
+                        if tabsManager.tabs.count == 0 {
+                            tabsManager.addTab()
+                        }
+                    }
                 }
                 .onMove { from, to in
                     tabsManager.tabs.move(fromOffsets: from, toOffset: to)

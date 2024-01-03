@@ -19,6 +19,7 @@ final class TabsManager: ObservableObject {
     @Published var lastTabId: UUID = UUID()
     @Published var selectedTab: Tab? = nil
     @Published var draggedTab: Tab? = nil
+    @Published var dropEnteredTab: Tab? = nil
     
     func setNewSelected(_ tab: Tab) {
         selectedTab = tab
@@ -37,11 +38,18 @@ final class TabsManager: ObservableObject {
     }
     
     func addTab() {
-        let newTab = Tab(id: UUID(), name: "blinksh/\(tabs.count + 1)")
         print(tabs.firstIndex(of: selectedTab!) ?? "No ID")
-        tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)! + 1)
-        selectedTab = newTab
-        lastTabId = newTab.id
+        if tabs.count == 0 {
+            let emptyTab = Tab(id: UUID(), name: "Empty Tab")
+            tabs.insert(emptyTab, at: 0)
+            selectedTab = emptyTab
+            lastTabId = emptyTab.id
+        } else {
+            let newTab = Tab(id: UUID(), name: "blinksh/\(tabs.count + 1)")
+            tabs.insert(newTab, at: tabs.firstIndex(of: selectedTab!)! + 1)
+            selectedTab = newTab
+            lastTabId = newTab.id
+        }
         updateTabs()
     }
     

@@ -15,6 +15,8 @@
 		CE71EB8E2B1B0D0F0045ED26 /* Tab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE71EB8D2B1B0D0F0045ED26 /* Tab.swift */; };
 		CE71EB902B1B0D280045ED26 /* TabsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE71EB8F2B1B0D280045ED26 /* TabsManager.swift */; };
 		CE71EB932B1B0DE20045ED26 /* BlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE71EB922B1B0DE20045ED26 /* BlurView.swift */; };
+		CEA6DDDB2B45DAFD005B8F50 /* iPadTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6DDDA2B45DAFD005B8F50 /* iPadTabsView.swift */; };
+		CEA6DDDD2B45DB1B005B8F50 /* iPhoneTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA6DDDC2B45DB1B005B8F50 /* iPhoneTabView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		CE71EB8D2B1B0D0F0045ED26 /* Tab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tab.swift; sourceTree = "<group>"; };
 		CE71EB8F2B1B0D280045ED26 /* TabsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabsManager.swift; sourceTree = "<group>"; };
 		CE71EB922B1B0DE20045ED26 /* BlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurView.swift; sourceTree = "<group>"; };
+		CEA6DDDA2B45DAFD005B8F50 /* iPadTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPadTabsView.swift; sourceTree = "<group>"; };
+		CEA6DDDC2B45DB1B005B8F50 /* iPhoneTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iPhoneTabView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +86,8 @@
 			children = (
 				CE71EB102B12D2490045ED26 /* ContentView.swift */,
 				CE014EBA2B4073BB00183C99 /* TabsEditSheetView.swift */,
+				CEA6DDDA2B45DAFD005B8F50 /* iPadTabsView.swift */,
+				CEA6DDDC2B45DB1B005B8F50 /* iPhoneTabView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -189,8 +195,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CEA6DDDB2B45DAFD005B8F50 /* iPadTabsView.swift in Sources */,
 				CE71EB8E2B1B0D0F0045ED26 /* Tab.swift in Sources */,
 				CE71EB902B1B0D280045ED26 /* TabsManager.swift in Sources */,
+				CEA6DDDD2B45DB1B005B8F50 /* iPhoneTabView.swift in Sources */,
 				CE71EB932B1B0DE20045ED26 /* BlurView.swift in Sources */,
 				CE71EB112B12D2490045ED26 /* ContentView.swift in Sources */,
 				CE014EBB2B4073BB00183C99 /* TabsEditSheetView.swift in Sources */,
