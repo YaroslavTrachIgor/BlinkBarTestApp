@@ -17,8 +17,8 @@ extension ContentView {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(tabsManager.tabs, id: \.id) { tab in
-                                tabButtonView(tab: tab, proxy: proxy)
+                            ForEach(0..<tabsManager.tabs.count, id: \.self) { index in
+                                tabButtonView(tab: tabsManager.tabs[index], proxy: proxy, index: index)
                             }
                         }
                         .cornerRadius(17.5)
@@ -39,7 +39,7 @@ extension ContentView {
     
     
     //MARK: - Single Tab View
-    func tabButtonView(tab: Tab, proxy: ScrollViewProxy) -> some View {
+    func tabButtonView(tab: Tab, proxy: ScrollViewProxy, index: Int) -> some View {
         Button(action: {
             withAnimation {
                 
@@ -94,15 +94,23 @@ extension ContentView {
                 .padding(.horizontal, 15)
             }
             .onDrag {
-                withAnimation {
-                    tabsManager.draggedTab = tab
-                    restartBarTimer(seconds: 999)
-                    return NSItemProvider()
-                }
+                dragIndex = index
+                restartBarTimer(seconds: 999)
+                return NSItemProvider(object: tabsManager.tabs[index].name as NSString as NSItemProviderWriting)
             }
-            .onDrop(of: ["public.item"], delegate: DragRelocateDelegate(tab: tab, tabsManager: tabsManager))
+            .onDrop(of: ["public.utf8-plain-text"], delegate: MyDropDelegate(onEnter: { _ in
+                withAnimation { enterIndex = index }
+            }, onExit: { _ in
+                withAnimation { enterIndex = -1 }
+            }, onDrop: { _ in
+                withAnimation {
+                    tabsManager.tabs.move(fromOffsets: Foundation.IndexSet(integer: dragIndex), toOffset: dragIndex > index ? index : index + 1)
+                    enterIndex = -1
+                    restartBarTimer()
+                }
+            }))
             .frame(width: tabsManager.selectedTab == tab ? 280 : 135, height: 35)
-            .background(determineBackgroundColor(for: tab))
+            .background(determineBackgroundColor(for: tab, index: index))
             .foregroundColor(tabsManager.selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
             .cornerRadius(17.5)
             .contextMenu {
@@ -221,8 +229,8 @@ extension ContentView {
         .tint(Color(.label).opacity(0.8))
     }
     
-    private func determineBackgroundColor(for tab: Tab) -> Color {
-        if let dropEnteredTab = tabsManager.dropEnteredTab, dropEnteredTab.id == tab.id {
+    private func determineBackgroundColor(for tab: Tab, index: Int) -> Color {
+        if index == enterIndex {
             return Color.teal.opacity(0.5)
         } else {
             return tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415)
@@ -233,32 +241,21 @@ extension ContentView {
 
 
 
-//MARK: - Main DragRelocate delegate
-struct DragRelocateDelegate: DropDelegate {
-    
-    let tab: Tab
-    let tabsManager: TabsManager
+struct MyDropDelegate: DropDelegate {
+    var onEnter: (DropInfo)->Void
+    var onExit: (DropInfo)->Void
+    var onDrop: (DropInfo)->Void
     
     func dropEntered(info: DropInfo) {
-        // Update the dragged tab in the manager when entering a drop zone
-        withAnimation {
-            tabsManager.dropEnteredTab = tab
-        }
+        onEnter(info)
+    }
+    
+    func dropExited(info: DropInfo) {
+        onExit(info)
     }
     
     func performDrop(info: DropInfo) -> Bool {
-        let fromIndex = tabsManager.tabs.firstIndex { $0.id == tab.id } ?? 0
-        let toIndex = tabsManager.tabs.firstIndex { $0.id == tabsManager.draggedTab!.id } ?? 0
-        
-        withAnimation {
-            tabsManager.dropEnteredTab = nil
-        }
-        
-        withAnimation {
-            tabsManager.tabs.move(fromOffsets: IndexSet(integer: fromIndex), toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex)
-        }
-        
+        onDrop(info)
         return true
     }
 }
-

@@ -30,6 +30,8 @@ struct ContentView: View {
     @State var contextRenameTab: Tab? = nil
     @State var contextRenameTabPlaceholder: String = "Enter new Tab name"
     
+    @State var dragIndex = 0
+    @State var enterIndex = -1
     
     
     //MARK: - Main View Configuration
