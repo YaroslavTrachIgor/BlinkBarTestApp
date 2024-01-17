@@ -33,6 +33,12 @@ struct ContentView: View {
     @State var dragIndex = 0
     @State var enterIndex = -1
     
+    @State var dragging: Tab?
+    let columns = [
+        GridItem(.fixed(160))
+    ]
+    
+    
     
     //MARK: - Main View Configuration
     var body: some View {

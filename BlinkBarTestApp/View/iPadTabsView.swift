@@ -17,9 +17,13 @@ extension ContentView {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(0..<tabsManager.tabs.count, id: \.self) { index in
-                                tabButtonView(tab: tabsManager.tabs[index], proxy: proxy, index: index)
+                            LazyHGrid(rows: columns) {
+                                ForEach(tabsManager.tabs, id: \.self) { tab in
+                                    tabButtonView(tab: tab, proxy: proxy)
+                                        .id(tab.id)
+                                }
                             }
+                            .cornerRadius(17.5)
                         }
                         .cornerRadius(17.5)
                     }
@@ -30,6 +34,8 @@ extension ContentView {
                 tabsCountButton
             }
             .padding(.all, 6)
+            .frame(height: 48)
+            .background(Color.clear.cornerRadius(29).frame(height: 45))
         }
         .background {
             Color(.systemGray6).opacity(0.8)
@@ -39,8 +45,8 @@ extension ContentView {
     
     
     //MARK: - Single Tab View
-    func tabButtonView(tab: Tab, proxy: ScrollViewProxy, index: Int) -> some View {
-        Button(action: {
+    func tabButtonView(tab: Tab, proxy: ScrollViewProxy) -> some View {
+        return Button(action: {
             withAnimation {
                 
                 //Set new selected tab when the user taps on the other tab
@@ -70,6 +76,13 @@ extension ContentView {
                             .frame(width: 15, height: 15)
                             .padding(.leading, 0)
                             .padding(.trailing, 4)
+                            .onAppear {
+                                withAnimation {
+                        
+                                    //Scroll the ScrollView to the tab last appeared on the screen
+                                    proxy.scrollTo(tabsManager.lastTabId, anchor: .trailing)
+                                }
+                            }
                         }
                     } else {
                         if tabsManager.tabs.count > 1 {
@@ -89,28 +102,20 @@ extension ContentView {
                             .opacity(0.6)
                             .foregroundColor(Color(.secondaryLabel))
                             .padding(.leading, 0)
+                            .onAppear {
+                                withAnimation {
+                        
+                                    //Scroll the ScrollView to the tab last appeared on the screen
+                                    proxy.scrollTo(tabsManager.lastTabId, anchor: .trailing)
+                                }
+                            }
                     }
                 }
                 .padding(.horizontal, 15)
             }
-            .onDrag {
-                dragIndex = index
-                restartBarTimer(seconds: 999)
-                return NSItemProvider(object: tabsManager.tabs[index].name as NSString as NSItemProviderWriting)
-            }
-            .onDrop(of: ["public.utf8-plain-text"], delegate: MyDropDelegate(onEnter: { _ in
-                withAnimation { enterIndex = index }
-            }, onExit: { _ in
-                withAnimation { enterIndex = -1 }
-            }, onDrop: { _ in
-                withAnimation {
-                    tabsManager.tabs.move(fromOffsets: Foundation.IndexSet(integer: dragIndex), toOffset: dragIndex > index ? index : index + 1)
-                    enterIndex = -1
-                    restartBarTimer()
-                }
-            }))
+            .cornerRadius(17.5)
             .frame(width: tabsManager.selectedTab == tab ? 280 : 135, height: 35)
-            .background(determineBackgroundColor(for: tab, index: index))
+            .background(determineBackgroundColor(for: tab))
             .foregroundColor(tabsManager.selectedTab == tab ? Color(.secondaryLabel) : Color(.label).opacity(0.8))
             .cornerRadius(17.5)
             .contextMenu {
@@ -125,13 +130,15 @@ extension ContentView {
             }
         }
         .cornerRadius(17.5)
-        .onAppear {
+        .overlay(dragging?.id == tab.id ? Color.white.opacity(0.4).cornerRadius(17.5) : Color.clear.cornerRadius(17.5))
+        .onDrag {
             withAnimation {
-                
-                //Scroll the ScrollView to the tab last appeared on the screen
-                proxy.scrollTo(tabsManager.lastTabId, anchor: .trailing)
+                self.dragging = tab
+                restartBarTimer(seconds: 999)
             }
+            return NSItemProvider(object: String(tab.id.description) as NSString)
         }
+        .onDrop(of: ["public.utf8-plain-text"], delegate: DragRelocateDelegate(item: tab, listData: $tabsManager.tabs, current: $dragging))
         .cornerRadius(17.5)
     }
     
@@ -229,12 +236,8 @@ extension ContentView {
         .tint(Color(.label).opacity(0.8))
     }
     
-    private func determineBackgroundColor(for tab: Tab, index: Int) -> Color {
-        if index == enterIndex {
-            return Color.teal.opacity(0.5)
-        } else {
-            return tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415)
-        }
+    private func determineBackgroundColor(for tab: Tab) -> Color {
+        return tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415)
     }
 }
 
@@ -256,6 +259,37 @@ struct MyDropDelegate: DropDelegate {
     
     func performDrop(info: DropInfo) -> Bool {
         onDrop(info)
+        return true
+    }
+}
+
+
+struct DragRelocateDelegate: DropDelegate {
+    let item: Tab
+    @Binding var listData: [Tab]
+    @Binding var current: Tab?
+
+    func dropEntered(info: DropInfo) {
+        withAnimation {
+            if item != current {
+                let from = listData.firstIndex(of: current!)!
+                let to = listData.firstIndex(of: item)!
+                if listData[to].id != current!.id {
+                    listData.move(fromOffsets: IndexSet(integer: from),
+                        toOffset: to > from ? to + 1 : to)
+                }
+            }
+        }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        withAnimation {
+            self.current = nil
+        }
         return true
     }
 }
