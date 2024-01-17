@@ -130,7 +130,7 @@ extension ContentView {
             }
         }
         .cornerRadius(17.5)
-        .overlay(dragging?.id == tab.id ? Color.white.opacity(0.4).cornerRadius(17.5) : Color.clear.cornerRadius(17.5))
+        .contentShape([.dragPreview], RoundedRectangle(cornerRadius: 20))
         .onDrag {
             withAnimation {
                 self.dragging = tab
@@ -240,29 +240,6 @@ extension ContentView {
         return tabsManager.selectedTab == tab ? Color(.systemGray2).opacity(0.5) : Color(.systemGray4).opacity(0.415)
     }
 }
-
-
-
-
-struct MyDropDelegate: DropDelegate {
-    var onEnter: (DropInfo)->Void
-    var onExit: (DropInfo)->Void
-    var onDrop: (DropInfo)->Void
-    
-    func dropEntered(info: DropInfo) {
-        onEnter(info)
-    }
-    
-    func dropExited(info: DropInfo) {
-        onExit(info)
-    }
-    
-    func performDrop(info: DropInfo) -> Bool {
-        onDrop(info)
-        return true
-    }
-}
-
 
 struct DragRelocateDelegate: DropDelegate {
     let item: Tab
